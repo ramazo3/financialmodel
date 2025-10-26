@@ -6,10 +6,10 @@ An AI-powered web application that generates comprehensive financial models from
 ## Tech Stack
 - **Frontend**: React, TypeScript, Tailwind CSS, Shadcn UI components, TanStack Query
 - **Backend**: Node.js, Express, TypeScript
+- **Database**: PostgreSQL (Neon) with Drizzle ORM
 - **AI**: Google Gemini API (gemini-2.5-flash, gemini-2.5-pro)
 - **File Generation**: ExcelJS for creating Excel workbooks
-- **Data**: CSV-based business sector dataset (35+ pre-analyzed sectors)
-- **Storage**: In-memory storage (MemStorage)
+- **Data**: CSV-based business sector dataset (34 pre-analyzed sectors loaded into database)
 
 ## Key Features
 1. **Multi-step Form Wizard**: Progressive disclosure of business input collection
@@ -34,11 +34,14 @@ An AI-powered web application that generates comprehensive financial models from
 - `server/gemini-service.ts` - Gemini AI integration with 4-agent orchestration
 - `server/excel-generator.ts` - Excel workbook generation using ExcelJS
 - `server/load-sectors.ts` - CSV data loading for business sectors
-- `server/storage.ts` - In-memory data storage
+- `server/storage.ts` - PostgreSQL database storage implementation with Drizzle ORM
+- `server/db.ts` - Database connection setup
 
 ### Data Model (`shared/schema.ts`)
-- **BusinessSector**: Sector benchmark data with 35+ metrics
-- **FinancialModel**: User inputs and generated model data
+- **businessSectors**: Sector benchmark data with 35+ metrics, supports custom user-created sectors
+- **financialModels**: User inputs and generated model data with versioning support
+- **modelVersions**: Version history for tracking changes to financial models
+- **scenarios**: Scenario planning with multiple assumption sets per model
 - **GeneratedModel**: AI-generated projections, metrics, risks, recommendations
 
 ## AI Agent System
@@ -119,10 +122,18 @@ generated_models/ - Excel files output directory
 - Frontend polls for model completion
 - All financial calculations done server-side by AI agents
 
-## Recent Changes (Latest Session)
+## Recent Changes
+
+### Latest Session (October 26, 2025)
+- **Database Migration**: Migrated from in-memory storage to PostgreSQL with Drizzle ORM
+- **Enhanced Schema**: Added tables for model versions, scenarios, and custom sectors
+- **CSV Parsing Fix**: Resolved malformed CSV format (double-escaped quotes and comma-separated fields)
+- Successfully loaded 34 business sectors into database
+- All models now persist across server restarts
+
+### Previous Session
 - Created complete frontend with 5-step wizard
 - Implemented all React components with professional UI
 - Built Gemini AI integration with 4-agent system
 - Added Excel file generation with ExcelJS
-- Loaded 35 business sectors from CSV dataset
 - Set up API routes for model generation and downloads

@@ -23,6 +23,8 @@ export const businessSectors = pgTable("business_sectors", {
   inventoryCost: text("inventory_cost").notNull(),
   topRisk: text("top_risk").notNull(),
   mitigatingControl: text("mitigating_control").notNull(),
+  isCustom: integer("is_custom").notNull().default(0), // 0 = pre-loaded, 1 = user-created
+  createdBy: varchar("created_by"),
 });
 
 export type BusinessSector = typeof businessSectors.$inferSelect;
@@ -39,19 +41,66 @@ export const financialModels = pgTable("financial_models", {
   customAssumptions: jsonb("custom_assumptions"),
   generatedModel: jsonb("generated_model"),
   excelFilePath: text("excel_file_path"),
+  pdfFilePath: text("pdf_file_path"),
   status: text("status").notNull().default("pending"), // pending, processing, completed, failed
+  name: text("name"), // User-friendly name for the model
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertFinancialModelSchema = createInsertSchema(financialModels).omit({
   id: true,
   createdAt: true,
   completedAt: true,
+  updatedAt: true,
 });
 
 export type InsertFinancialModel = z.infer<typeof insertFinancialModelSchema>;
 export type FinancialModel = typeof financialModels.$inferSelect;
+
+// Model Versions for version history
+export const modelVersions = pgTable("model_versions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  modelId: varchar("model_id").notNull().references(() => financialModels.id, { onDelete: "cascade" }),
+  versionNumber: integer("version_number").notNull(),
+  businessIdea: text("business_idea").notNull(),
+  selectedSector: text("selected_sector"),
+  startupCost: numeric("startup_cost"),
+  monthlyRevenue: numeric("monthly_revenue"),
+  grossMargin: numeric("gross_margin"),
+  operatingExpenses: numeric("operating_expenses"),
+  customAssumptions: jsonb("custom_assumptions"),
+  generatedModel: jsonb("generated_model"),
+  excelFilePath: text("excel_file_path"),
+  changeDescription: text("change_description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type ModelVersion = typeof modelVersions.$inferSelect;
+
+// Scenarios for scenario planning
+export const scenarios = pgTable("scenarios", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  modelId: varchar("model_id").notNull().references(() => financialModels.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  startupCost: numeric("startup_cost"),
+  monthlyRevenue: numeric("monthly_revenue"),
+  grossMargin: numeric("gross_margin"),
+  operatingExpenses: numeric("operating_expenses"),
+  customAssumptions: jsonb("custom_assumptions"),
+  generatedModel: jsonb("generated_model"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertScenarioSchema = createInsertSchema(scenarios).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertScenario = z.infer<typeof insertScenarioSchema>;
+export type Scenario = typeof scenarios.$inferSelect;
 
 // User input schemas for the multi-step form
 export const businessIdeaInputSchema = z.object({
