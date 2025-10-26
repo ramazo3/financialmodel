@@ -6,7 +6,7 @@ import type { BusinessSector, GeneratedModel } from "@shared/schema";
 // - Note that the newest Gemini model series is "gemini-2.5-flash" or gemini-2.5-pro"
 //   - do not change this unless explicitly requested by the user
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const ai = new GoogleGenAI({ apiKey: process.env.IFA_GEMINI_API_KEY || "" });
 
 interface ModelGenerationInput {
   businessIdea: string;

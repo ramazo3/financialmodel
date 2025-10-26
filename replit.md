@@ -103,7 +103,7 @@ Creates a new version snapshot of the current model state
 Restores a model to a previous version
 
 ## Environment Variables
-- `GEMINI_API_KEY` - Google Gemini API key (required)
+- `IFA_GEMINI_API_KEY` - Google Gemini API key (required)
 - `PORT` - Server port (default: 5000)
 
 ## Design System
