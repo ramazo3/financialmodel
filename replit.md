@@ -18,16 +18,21 @@ An AI-powered web application that generates comprehensive financial models from
 4. **AI Agent Processing**: 4-agent system (Data Analyst, Financial Modeler, Validator, Excel Generator)
 5. **Results Dashboard**: View key metrics, executive summary, risks, and recommendations
 6. **Excel Download**: Complete financial model with multiple worksheets
+7. **Saved Models**: View and manage all generated models with list and detail pages
+8. **Version History**: Save model snapshots and restore previous versions with change tracking
 
 ## Architecture
 
 ### Frontend Components
 - `pages/home.tsx` - Main page with step-by-step wizard
+- `pages/models.tsx` - List view of all saved models
+- `pages/model-detail.tsx` - Detailed view of individual model with results
 - `components/business-idea-form.tsx` - Step 1: Business idea description
 - `components/sector-selection.tsx` - Step 2: Sector matching and selection
 - `components/financial-assumptions-form.tsx` - Step 3: Financial inputs with live calculations
 - `components/agent-processing.tsx` - Step 4: AI processing status display
 - `components/results-dashboard.tsx` - Step 5: Results and download
+- `components/version-history.tsx` - Version control with save/restore functionality
 
 ### Backend Services
 - `server/routes.ts` - API endpoints for sectors, model generation, downloads
@@ -78,11 +83,24 @@ Initiates financial model generation
 - Returns: model ID and processing status
 - Triggers background AI processing
 
+### `GET /api/models`
+Returns all financial models for the user
+
 ### `GET /api/models/:id`
 Retrieves financial model by ID (including generated results)
 
 ### `GET /api/download/:id`
 Downloads the Excel file for a completed model
+
+### `GET /api/models/:id/versions`
+Returns version history for a specific model
+
+### `POST /api/models/:id/versions`
+Creates a new version snapshot of the current model state
+- Body: { changeDescription?: string }
+
+### `POST /api/models/:modelId/versions/:versionId/restore`
+Restores a model to a previous version
 
 ## Environment Variables
 - `GEMINI_API_KEY` - Google Gemini API key (required)
@@ -125,11 +143,21 @@ generated_models/ - Excel files output directory
 ## Recent Changes
 
 ### Latest Session (October 26, 2025)
+- **Version History Feature**: Implemented full version control system
+  - Save model snapshots with optional change descriptions
+  - View version history with expandable financial details
+  - Restore any previous version with confirmation dialog
+  - Proper cache invalidation and toast notifications
+  - E2E tested and production-ready
+- **Saved Models Pages**: Added list and detail views
+  - Models list page showing all generated models
+  - Individual model detail page with full results
+  - Download Excel files from both pages
+  - Navigation between home and models pages
 - **Database Migration**: Migrated from in-memory storage to PostgreSQL with Drizzle ORM
-- **Enhanced Schema**: Added tables for model versions, scenarios, and custom sectors
-- **CSV Parsing Fix**: Resolved malformed CSV format (double-escaped quotes and comma-separated fields)
-- Successfully loaded 34 business sectors into database
-- All models now persist across server restarts
+  - Enhanced schema with tables for model versions, scenarios, and custom sectors
+  - Successfully loaded 33 out of 34 business sectors (1 malformed CSV row)
+  - All models persist across server restarts with full ACID guarantees
 
 ### Previous Session
 - Created complete frontend with 5-step wizard
