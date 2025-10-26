@@ -187,25 +187,46 @@ export function ResultsDashboard({ modelId, onStartOver }: ResultsDashboardProps
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {generatedModel.riskAnalysis.map((risk, index) => (
-              <div
-                key={index}
-                className="p-4 rounded-lg border bg-card hover-elevate"
-              >
-                <div className="flex items-start gap-3">
-                  <Badge variant="outline" className="mt-0.5">
-                    {risk.impact}
-                  </Badge>
-                  <div className="flex-1 space-y-2">
-                    <h4 className="font-medium text-foreground">{risk.risk}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">Mitigation: </span>
-                      {risk.mitigation}
-                    </p>
+            {generatedModel.riskAnalysis.map((risk, index) => {
+              const impactLevel = risk.impact.toLowerCase();
+              const isHigh = impactLevel.includes('high');
+              const isMedium = impactLevel.includes('medium');
+              const isLow = impactLevel.includes('low');
+              
+              const severityColors = isHigh 
+                ? 'border-l-red-500 bg-red-50 dark:bg-red-950/20'
+                : isMedium 
+                ? 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
+                : 'border-l-blue-500 bg-blue-50 dark:bg-blue-950/20';
+              
+              const badgeVariant = isHigh ? 'destructive' : isMedium ? 'default' : 'secondary';
+              
+              return (
+                <div
+                  key={index}
+                  className={`p-5 rounded-lg border-l-4 ${severityColors} border border-border/50`}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <h4 className="font-semibold text-base text-foreground flex-1 leading-snug">
+                        {risk.risk}
+                      </h4>
+                      <Badge variant={badgeVariant} className="flex-shrink-0">
+                        {risk.impact}
+                      </Badge>
+                    </div>
+                    <div className="pl-4 border-l-2 border-muted">
+                      <p className="text-sm text-muted-foreground mb-1 font-medium">
+                        Mitigation Strategy:
+                      </p>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {risk.mitigation}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>

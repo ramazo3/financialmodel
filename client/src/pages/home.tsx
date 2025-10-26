@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Circle, Loader2, Sparkles, FolderOpen } from "lucide-react";
+import { CheckCircle, Circle, Loader2 } from "lucide-react";
+import { Header } from "@/components/header";
 import { BusinessIdeaForm } from "@/components/business-idea-form";
 import { SectorSelection } from "@/components/sector-selection";
 import { FinancialAssumptionsForm } from "@/components/financial-assumptions-form";
@@ -63,25 +62,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
-              <Sparkles className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">Inachee Financial Agent</h1>
-              <p className="text-sm text-muted-foreground">AI-Powered Financial Modeling</p>
-            </div>
-          </div>
-          <Link href="/models">
-            <Button variant="outline" data-testid="button-view-models">
-              <FolderOpen className="w-4 h-4 mr-2" />
-              Saved Models
-            </Button>
-          </Link>
-        </div>
-      </header>
+      <Header showModelsButton={true} />
 
       {/* Progress Stepper */}
       <div className="border-b bg-card">

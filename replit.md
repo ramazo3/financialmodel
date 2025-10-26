@@ -27,11 +27,12 @@ An AI-powered web application that generates comprehensive financial models from
 - `pages/home.tsx` - Main page with step-by-step wizard
 - `pages/models.tsx` - List view of all saved models
 - `pages/model-detail.tsx` - Detailed view of individual model with results
+- `components/header.tsx` - Reusable navigation header with IFA logo
 - `components/business-idea-form.tsx` - Step 1: Business idea description
 - `components/sector-selection.tsx` - Step 2: Sector matching and selection
 - `components/financial-assumptions-form.tsx` - Step 3: Financial inputs with live calculations
 - `components/agent-processing.tsx` - Step 4: AI processing status display
-- `components/results-dashboard.tsx` - Step 5: Results and download
+- `components/results-dashboard.tsx` - Step 5: Results and download with enhanced risk analysis UI
 - `components/version-history.tsx` - Version control with save/restore functionality
 - `components/scenario-planning.tsx` - Scenario analysis with CRUD operations and comparison table
 
@@ -159,6 +160,13 @@ generated_models/ - Excel files output directory
 ## Recent Changes
 
 ### Latest Session (October 26, 2025)
+- **UI Improvements**:
+  - Enhanced Risk Analysis section with color-coded severity levels (High/Medium/Low)
+  - Added border-left accent colors based on risk impact
+  - Improved typography and spacing for better readability
+  - Professional formatting with distinct mitigation strategy sections
+  - Added IFA logo to application header across all pages
+  - Created reusable Header component with navigation
 - **Scenario Planning Feature**: Implemented complete scenario analysis system
   - Create alternative scenarios with different financial assumptions
   - Edit and delete scenarios with proper validation

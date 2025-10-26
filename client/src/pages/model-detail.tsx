@@ -4,6 +4,7 @@ import { FinancialModel } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Header } from "@/components/header";
 import { Download, ArrowLeft, FileSpreadsheet, TrendingUp, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { VersionHistory } from "@/components/version-history";
@@ -26,6 +27,7 @@ export default function ModelDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <Header showHomeButton={true} />
         <div className="container mx-auto px-4 py-8">
           <Skeleton className="h-10 w-48 mb-8" />
           <div className="grid gap-6">
@@ -40,6 +42,7 @@ export default function ModelDetailPage() {
   if (!model) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <Header showHomeButton={true} />
         <div className="container mx-auto px-4 py-8">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -65,6 +68,7 @@ export default function ModelDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <Header showHomeButton={true} />
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
