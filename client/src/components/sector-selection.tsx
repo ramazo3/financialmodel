@@ -23,8 +23,8 @@ export function SectorSelection({ businessIdea, onSelect, onBack }: SectorSelect
   });
 
   const filteredSectors = sectors?.filter(sector =>
-    sector.sectorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sector.investorPersonaFit.toLowerCase().includes(searchTerm.toLowerCase())
+    sector.sectorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sector.investorPersonaFit?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const handleSelect = (sectorName: string) => {

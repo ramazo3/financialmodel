@@ -18,11 +18,34 @@ export async function loadBusinessSectors() {
   }
 
   const fileContent = fs.readFileSync(csvPath, "utf-8");
-  const records = parse(fileContent, {
+  
+  // The CSV file has each entire row wrapped in quotes, which is non-standard
+  // After removing outer quotes, fields with commas are marked with "" (double quotes)
+  // We need to convert "" to proper CSV quoting
+  const lines = fileContent.split(/\r?\n/).filter(l => l.trim().length > 0);
+  const fixedLines = lines.map(line => {
+    const trimmed = line.trim();
+    // Remove outer quotes if present
+    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+      const unwrapped = trimmed.slice(1, -1);
+      // Now convert ""value"" patterns to "value" (single-quoted)
+      // This makes them proper CSV quoted fields
+      // Use a regex to find ""..."" patterns and convert to "..."
+      const fixed = unwrapped.replace(/""/g, '"');
+      return fixed;
+    }
+    return trimmed;
+  });
+  
+  // Now use the standard CSV parser
+  const fixedContent = fixedLines.join('\n');
+  const records = parse(fixedContent, {
     columns: true,
     skip_empty_lines: true,
     trim: true,
     relax_column_count: true,
+    quote: '"',
+    escape: '"',
   });
 
   console.log(`Loading ${records.length} business sectors...`);
