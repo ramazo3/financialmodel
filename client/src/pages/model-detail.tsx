@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download, ArrowLeft, FileSpreadsheet, TrendingUp, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
+import { VersionHistory } from "@/components/version-history";
 
 export default function ModelDetailPage() {
   const [, params] = useRoute("/models/:id");
@@ -259,6 +260,9 @@ export default function ModelDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Version History */}
+          {modelId && <VersionHistory modelId={modelId} />}
         </div>
       </div>
     </div>

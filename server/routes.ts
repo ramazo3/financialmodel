@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { generateFinancialModel } from "./gemini-service";
 import { generateExcelFile } from "./excel-generator";
+import { z } from "zod";
 import * as fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -110,6 +111,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error downloading file:", error);
       res.status(500).json({ error: "Failed to download file" });
+    }
+  });
+
+  // Get model version history
+  app.get("/api/models/:id/versions", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const versions = await storage.getModelVersions(id);
+      res.json(versions);
+    } catch (error) {
+      console.error("Error fetching versions:", error);
+      res.status(500).json({ error: "Failed to fetch versions" });
+    }
+  });
+
+  // Create a new version
+  app.post("/api/models/:id/versions", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const versionSchema = z.object({
+        changeDescription: z.string().optional(),
+      });
+      
+      const validated = versionSchema.parse(req.body);
+      const version = await storage.createModelVersion(id, validated.changeDescription);
+      res.json(version);
+    } catch (error) {
+      console.error("Error creating version:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create version" });
+    }
+  });
+
+  // Restore a version
+  app.post("/api/models/:modelId/versions/:versionId/restore", async (req, res) => {
+    try {
+      const { modelId, versionId } = req.params;
+      
+      // Validate that IDs are provided
+      if (!modelId || !versionId) {
+        return res.status(400).json({ error: "Model ID and version ID are required" });
+      }
+      
+      const updated = await storage.restoreVersion(modelId, versionId);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error restoring version:", error);
+      if (error instanceof Error && error.message.includes("not found")) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: "Failed to restore version" });
     }
   });
 

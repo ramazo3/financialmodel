@@ -28,6 +28,7 @@ export interface IStorage {
   // Model Versions
   createModelVersion(modelId: string, changeDescription?: string): Promise<ModelVersion>;
   getModelVersions(modelId: string): Promise<ModelVersion[]>;
+  restoreVersion(modelId: string, versionId: string): Promise<FinancialModel>;
   
   // Scenarios
   createScenario(scenario: InsertScenario): Promise<Scenario>;
@@ -126,6 +127,39 @@ export class DbStorage implements IStorage {
       .from(modelVersions)
       .where(eq(modelVersions.modelId, modelId))
       .orderBy(modelVersions.versionNumber);
+  }
+
+  async restoreVersion(modelId: string, versionId: string): Promise<FinancialModel> {
+    const version = await db
+      .select()
+      .from(modelVersions)
+      .where(eq(modelVersions.id, versionId))
+      .limit(1);
+
+    if (!version[0] || version[0].modelId !== modelId) {
+      throw new Error("Version not found or does not belong to this model");
+    }
+
+    const v = version[0];
+    
+    const updated = await db
+      .update(financialModels)
+      .set({
+        businessIdea: v.businessIdea,
+        selectedSector: v.selectedSector,
+        startupCost: v.startupCost,
+        monthlyRevenue: v.monthlyRevenue,
+        grossMargin: v.grossMargin,
+        operatingExpenses: v.operatingExpenses,
+        customAssumptions: v.customAssumptions,
+        generatedModel: v.generatedModel,
+        excelFilePath: v.excelFilePath,
+        updatedAt: new Date(),
+      })
+      .where(eq(financialModels.id, modelId))
+      .returning();
+
+    return updated[0];
   }
 
   // Scenarios
