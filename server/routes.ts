@@ -64,6 +64,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all financial models
+  app.get("/api/models", async (_req, res) => {
+    try {
+      const models = await storage.getAllFinancialModels();
+      res.json(models);
+    } catch (error) {
+      console.error("Error fetching models:", error);
+      res.status(500).json({ error: "Failed to fetch models" });
+    }
+  });
+
   // Get financial model by ID
   app.get("/api/models/:id", async (req, res) => {
     try {

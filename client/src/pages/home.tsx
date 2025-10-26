@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Circle, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle, Circle, Loader2, Sparkles, FolderOpen } from "lucide-react";
 import { BusinessIdeaForm } from "@/components/business-idea-form";
 import { SectorSelection } from "@/components/sector-selection";
 import { FinancialAssumptionsForm } from "@/components/financial-assumptions-form";
@@ -73,6 +74,12 @@ export default function Home() {
               <p className="text-sm text-muted-foreground">AI-Powered Financial Modeling</p>
             </div>
           </div>
+          <Link href="/models">
+            <Button variant="outline" data-testid="button-view-models">
+              <FolderOpen className="w-4 h-4 mr-2" />
+              Saved Models
+            </Button>
+          </Link>
         </div>
       </header>
 
