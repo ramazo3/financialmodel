@@ -58,11 +58,12 @@ export function AgentProcessing({ formData, onComplete }: AgentProcessingProps) 
   const [completedAgents, setCompletedAgents] = useState<string[]>([]);
   const [statusMessage, setStatusMessage] = useState("Initializing AI agents...");
   const [modelId, setModelId] = useState<string | null>(null);
+  const [agentIntervalId, setAgentIntervalId] = useState<NodeJS.Timeout | null>(null);
 
   const generateMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("POST", "/api/generate-model", formData);
-      return response;
+      return response as { id: string; status: string };
     },
     onSuccess: (data) => {
       setModelId(data.id);
@@ -77,6 +78,11 @@ export function AgentProcessing({ formData, onComplete }: AgentProcessingProps) 
   const { data: model, error: queryError } = useQuery<FinancialModel>({
     queryKey: ["/api/models", modelId],
     enabled: !!modelId,
+    queryFn: async () => {
+      const response = await fetch(`/api/models/${modelId}`);
+      if (!response.ok) throw new Error('Failed to fetch model status');
+      return response.json();
+    },
     refetchInterval: (query) => {
       const data = query.state.data;
       // Stop polling once completed or failed
@@ -105,31 +111,41 @@ export function AgentProcessing({ formData, onComplete }: AgentProcessingProps) 
           setCompletedAgents(completed => [...completed, agents[prev].id]);
           setStatusMessage(agents[prev + 1].description);
           return prev + 1;
-        } else {
-          setCompletedAgents(completed => [...completed, agents[prev].id]);
-          setStatusMessage("Finalizing your financial model...");
-          return prev;
         }
+        return prev; // Don't increment past the last agent
       });
     }, 8000); // Each agent takes ~8 seconds
 
-    return () => clearInterval(agentInterval);
+    setAgentIntervalId(agentInterval);
+
+    return () => {
+      if (agentInterval) clearInterval(agentInterval);
+    };
   }, []);
 
   // Check if processing is complete or failed
   useEffect(() => {
     if (model?.status === "completed" && model.generatedModel) {
       // Clear cosmetic progress interval
+      if (agentIntervalId) {
+        clearInterval(agentIntervalId);
+        setAgentIntervalId(null);
+      }
       setCurrentAgentIndex(agents.length - 1);
       setCompletedAgents(agents.map(a => a.id));
+      setStatusMessage("Model generation complete!");
       onComplete(model.id);
     } else if (model?.status === "failed") {
+      // Clear cosmetic progress interval
+      if (agentIntervalId) {
+        clearInterval(agentIntervalId);
+        setAgentIntervalId(null);
+      }
       setStatusMessage("Error: Model generation failed. Please try again.");
-      // Clear cosmetic progress
       setCurrentAgentIndex(0);
       setCompletedAgents([]);
     }
-  }, [model, onComplete]);
+  }, [model, onComplete, agentIntervalId]);
 
   const progress = ((completedAgents.length) / agents.length) * 100;
   const currentAgent = agents[currentAgentIndex];
