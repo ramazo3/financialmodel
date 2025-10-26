@@ -33,6 +33,7 @@ An AI-powered web application that generates comprehensive financial models from
 - `components/agent-processing.tsx` - Step 4: AI processing status display
 - `components/results-dashboard.tsx` - Step 5: Results and download
 - `components/version-history.tsx` - Version control with save/restore functionality
+- `components/scenario-planning.tsx` - Scenario analysis with CRUD operations and comparison table
 
 ### Backend Services
 - `server/routes.ts` - API endpoints for sectors, model generation, downloads
@@ -102,6 +103,21 @@ Creates a new version snapshot of the current model state
 ### `POST /api/models/:modelId/versions/:versionId/restore`
 Restores a model to a previous version
 
+### `GET /api/models/:id/scenarios`
+Returns all scenarios for a specific model
+
+### `POST /api/models/:id/scenarios`
+Creates a new scenario with alternative assumptions
+- Body: { name, description?, startupCost?, monthlyRevenue?, grossMargin?, operatingExpenses? }
+- All numeric fields are validated and coerced properly
+
+### `PUT /api/scenarios/:id`
+Updates an existing scenario
+- Body: same as POST (all fields optional except validation rules)
+
+### `DELETE /api/scenarios/:id`
+Deletes a scenario
+
 ## Environment Variables
 - `IFA_GEMINI_API_KEY` - Google Gemini API key (required)
 - `PORT` - Server port (default: 5000)
@@ -143,6 +159,15 @@ generated_models/ - Excel files output directory
 ## Recent Changes
 
 ### Latest Session (October 26, 2025)
+- **Scenario Planning Feature**: Implemented complete scenario analysis system
+  - Create alternative scenarios with different financial assumptions
+  - Edit and delete scenarios with proper validation
+  - Side-by-side comparison table showing baseline vs all scenarios
+  - Professional formatting for currency and percentages
+  - Full CRUD operations with Zod validation and error handling
+  - React Hook Form with zodResolver for robust form validation
+  - Proper numeric coercion handling empty fields (no NaN issues)
+  - E2E tested and production-ready
 - **Version History Feature**: Implemented full version control system
   - Save model snapshots with optional change descriptions
   - View version history with expandable financial details

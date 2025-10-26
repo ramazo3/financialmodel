@@ -110,7 +110,6 @@ export function AgentProcessing({ formData, onComplete }: AgentProcessingProps) 
         if (prev < agents.length - 1) {
           setCompletedAgents(completed => [...completed, agents[prev].id]);
           setStatusMessage(agents[prev + 1].description);
-          console.log(`Cosmetic progress: Agent ${prev + 1} of ${agents.length}`);
           return prev + 1;
         }
         return prev; // Don't increment past the last agent
@@ -126,10 +125,7 @@ export function AgentProcessing({ formData, onComplete }: AgentProcessingProps) 
 
   // Check if processing is complete or failed
   useEffect(() => {
-    console.log('Model status check:', { status: model?.status, hasGeneratedModel: !!model?.generatedModel, modelId: model?.id });
-    
     if (model?.status === "completed" && model.generatedModel) {
-      console.log('Model completed! Clearing interval and updating UI');
       // Clear cosmetic progress interval
       if (agentIntervalId) {
         clearInterval(agentIntervalId);
@@ -140,7 +136,6 @@ export function AgentProcessing({ formData, onComplete }: AgentProcessingProps) 
       setStatusMessage("Model generation complete!");
       onComplete(model.id);
     } else if (model?.status === "failed") {
-      console.log('Model failed!');
       // Clear cosmetic progress interval
       if (agentIntervalId) {
         clearInterval(agentIntervalId);

@@ -168,6 +168,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get scenarios for a model
+  app.get("/api/models/:id/scenarios", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const scenarios = await storage.getScenarios(id);
+      res.json(scenarios);
+    } catch (error) {
+      console.error("Error fetching scenarios:", error);
+      res.status(500).json({ error: "Failed to fetch scenarios" });
+    }
+  });
+
+  // Create a new scenario
+  app.post("/api/models/:id/scenarios", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const scenarioSchema = z.object({
+        name: z.string().min(1, "Scenario name is required"),
+        description: z.string().optional(),
+        startupCost: z.number().optional(),
+        monthlyRevenue: z.number().optional(),
+        grossMargin: z.number().optional(),
+        operatingExpenses: z.number().optional(),
+        customAssumptions: z.record(z.string(), z.any()).optional(),
+      });
+      
+      const validated = scenarioSchema.parse(req.body);
+      const scenario = await storage.createScenario({
+        modelId: id,
+        name: validated.name,
+        description: validated.description,
+        startupCost: validated.startupCost?.toString(),
+        monthlyRevenue: validated.monthlyRevenue?.toString(),
+        grossMargin: validated.grossMargin?.toString(),
+        operatingExpenses: validated.operatingExpenses?.toString(),
+        customAssumptions: validated.customAssumptions,
+      });
+      res.json(scenario);
+    } catch (error) {
+      console.error("Error creating scenario:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create scenario" });
+    }
+  });
+
+  // Update a scenario
+  app.put("/api/scenarios/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const updateSchema = z.object({
+        name: z.string().min(1).optional(),
+        description: z.string().optional(),
+        startupCost: z.number().optional(),
+        monthlyRevenue: z.number().optional(),
+        grossMargin: z.number().optional(),
+        operatingExpenses: z.number().optional(),
+        customAssumptions: z.record(z.string(), z.any()).optional(),
+      });
+      
+      const validated = updateSchema.parse(req.body);
+      const scenario = await storage.updateScenario(id, {
+        name: validated.name,
+        description: validated.description,
+        startupCost: validated.startupCost?.toString(),
+        monthlyRevenue: validated.monthlyRevenue?.toString(),
+        grossMargin: validated.grossMargin?.toString(),
+        operatingExpenses: validated.operatingExpenses?.toString(),
+        customAssumptions: validated.customAssumptions,
+      });
+      
+      if (!scenario) {
+        return res.status(404).json({ error: "Scenario not found" });
+      }
+      
+      res.json(scenario);
+    } catch (error) {
+      console.error("Error updating scenario:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update scenario" });
+    }
+  });
+
+  // Delete a scenario
+  app.delete("/api/scenarios/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteScenario(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Scenario not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting scenario:", error);
+      res.status(500).json({ error: "Failed to delete scenario" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Download, ArrowLeft, FileSpreadsheet, TrendingUp, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { VersionHistory } from "@/components/version-history";
+import { ScenarioPlanning } from "@/components/scenario-planning";
 
 export default function ModelDetailPage() {
   const [, params] = useRoute("/models/:id");
@@ -263,6 +264,19 @@ export default function ModelDetailPage() {
 
           {/* Version History */}
           {modelId && <VersionHistory modelId={modelId} />}
+
+          {/* Scenario Planning */}
+          {modelId && hasResults && (
+            <ScenarioPlanning
+              modelId={modelId}
+              baselineAssumptions={{
+                startupCost: model.startupCost,
+                monthlyRevenue: model.monthlyRevenue,
+                grossMargin: model.grossMargin,
+                operatingExpenses: model.operatingExpenses,
+              }}
+            />
+          )}
         </div>
       </div>
     </div>
