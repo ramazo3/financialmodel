@@ -66,11 +66,22 @@ async function runFinancialModelerAgent(
 
 Generate a comprehensive financial model with:
 1. Executive Summary (2-3 paragraphs)
-2. Monthly revenue projections for 12 months
-3. Monthly cash flow projections for 12 months
-4. Key financial metrics (break-even month, total revenue, net profit, ROI, payback period)
-5. Risk analysis (3-5 key risks with impact and mitigation)
-6. Strategic recommendations (5-7 actionable items)
+2. Monthly revenue projections for 12 months (Year 1 detail)
+3. Monthly cash flow projections for 12 months (Year 1 detail)
+4. Annual projections for 5 years (with realistic growth assumptions based on the business sector and market conditions)
+5. Key financial metrics (break-even month, Year 1 totals, ROI, payback period, Year 5 projections)
+6. Risk analysis (3-5 key risks with impact and mitigation)
+7. Strategic recommendations (5-7 actionable items)
+
+For annual projections (Years 1-5):
+- Base Year 1 on the monthly projections
+- Project Years 2-5 with realistic growth rates considering:
+  * Market maturity and competition
+  * Operational scaling efficiencies
+  * Industry growth trends
+  * Startup lifecycle phases
+- Include revenue, expenses, gross profit, and net profit for each year
+- Growth rates should be credible (typically 20-60% for Year 2, tapering to 10-30% by Year 5)
 
 Respond ONLY with valid JSON matching this exact structure.`;
 
@@ -121,6 +132,20 @@ Generate the complete financial model.`;
               required: ["month", "inflow", "outflow", "netCashFlow", "cumulativeCash"],
             },
           },
+          annualProjections: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                year: { type: "number" },
+                revenue: { type: "number" },
+                expenses: { type: "number" },
+                grossProfit: { type: "number" },
+                netProfit: { type: "number" },
+              },
+              required: ["year", "revenue", "expenses", "grossProfit", "netProfit"],
+            },
+          },
           keyMetrics: {
             type: "object",
             properties: {
@@ -129,8 +154,10 @@ Generate the complete financial model.`;
               year1NetProfit: { type: "number" },
               roi: { type: "number" },
               paybackPeriod: { type: "number" },
+              projectedYear5Revenue: { type: "number" },
+              projectedYear5NetProfit: { type: "number" },
             },
-            required: ["breakEvenMonth", "year1TotalRevenue", "year1NetProfit", "roi", "paybackPeriod"],
+            required: ["breakEvenMonth", "year1TotalRevenue", "year1NetProfit", "roi", "paybackPeriod", "projectedYear5Revenue", "projectedYear5NetProfit"],
           },
           riskAnalysis: {
             type: "array",
@@ -153,6 +180,7 @@ Generate the complete financial model.`;
           "executiveSummary",
           "revenueProjections",
           "cashFlow",
+          "annualProjections",
           "keyMetrics",
           "riskAnalysis",
           "recommendations",
@@ -176,7 +204,6 @@ async function runValidatorAgent(
   model: GeneratedModel
 ): Promise<GeneratedModel> {
   // Perform validation and make adjustments if needed
-  // For now, we'll do basic validation
   
   // Ensure all projections have 12 months
   if (model.revenueProjections.length !== 12) {
@@ -203,6 +230,76 @@ async function runValidatorAgent(
         netCashFlow: lastMonth.netCashFlow * 1.07,
         cumulativeCash: lastMonth.cumulativeCash + lastMonth.netCashFlow * 1.07,
       });
+    }
+  }
+
+  // Ensure annual projections have 5 years
+  if (!model.annualProjections || model.annualProjections.length !== 5) {
+    console.warn("Annual projections don't have 5 years, generating fallback...");
+    
+    // Only generate fallback if we have valid Year 1 data
+    const hasValidYear1Data = 
+      typeof model.keyMetrics?.year1TotalRevenue === 'number' &&
+      isFinite(model.keyMetrics.year1TotalRevenue) &&
+      typeof model.keyMetrics?.year1NetProfit === 'number' &&
+      isFinite(model.keyMetrics.year1NetProfit) &&
+      model.keyMetrics.year1TotalRevenue >= model.keyMetrics.year1NetProfit;
+    
+    if (!hasValidYear1Data) {
+      console.warn("Cannot generate annual projections fallback: Year 1 data is incomplete or invalid");
+      model.annualProjections = []; // Set empty array to avoid undefined
+      return model;
+    }
+    
+    const year1Revenue = model.keyMetrics.year1TotalRevenue;
+    const year1Expenses = year1Revenue - model.keyMetrics.year1NetProfit;
+    
+    model.annualProjections = [
+      {
+        year: 1,
+        revenue: year1Revenue,
+        expenses: year1Expenses,
+        grossProfit: year1Revenue - year1Expenses,
+        netProfit: model.keyMetrics.year1NetProfit,
+      },
+      {
+        year: 2,
+        revenue: year1Revenue * 1.4,
+        expenses: year1Expenses * 1.3,
+        grossProfit: (year1Revenue * 1.4) - (year1Expenses * 1.3),
+        netProfit: (year1Revenue * 1.4) - (year1Expenses * 1.3),
+      },
+      {
+        year: 3,
+        revenue: year1Revenue * 1.9,
+        expenses: year1Expenses * 1.6,
+        grossProfit: (year1Revenue * 1.9) - (year1Expenses * 1.6),
+        netProfit: (year1Revenue * 1.9) - (year1Expenses * 1.6),
+      },
+      {
+        year: 4,
+        revenue: year1Revenue * 2.5,
+        expenses: year1Expenses * 2.0,
+        grossProfit: (year1Revenue * 2.5) - (year1Expenses * 2.0),
+        netProfit: (year1Revenue * 2.5) - (year1Expenses * 2.0),
+      },
+      {
+        year: 5,
+        revenue: year1Revenue * 3.2,
+        expenses: year1Expenses * 2.5,
+        grossProfit: (year1Revenue * 3.2) - (year1Expenses * 2.5),
+        netProfit: (year1Revenue * 3.2) - (year1Expenses * 2.5),
+      },
+    ];
+  }
+
+  // Ensure Year 5 metrics are set (only if we have valid annual projections)
+  if (model.annualProjections && model.annualProjections.length === 5) {
+    if (!model.keyMetrics.projectedYear5Revenue || !isFinite(model.keyMetrics.projectedYear5Revenue)) {
+      model.keyMetrics.projectedYear5Revenue = model.annualProjections[4].revenue;
+    }
+    if (!model.keyMetrics.projectedYear5NetProfit || !isFinite(model.keyMetrics.projectedYear5NetProfit)) {
+      model.keyMetrics.projectedYear5NetProfit = model.annualProjections[4].netProfit;
     }
   }
 

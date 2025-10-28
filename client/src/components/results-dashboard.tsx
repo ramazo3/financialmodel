@@ -15,6 +15,7 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import type { FinancialModel, GeneratedModel } from "@shared/schema";
+import { FinancialCharts } from "@/components/financial-charts";
 
 interface ResultsDashboardProps {
   modelId: string;
@@ -173,6 +174,9 @@ export function ResultsDashboard({ modelId, onStartOver }: ResultsDashboardProps
           </p>
         </CardContent>
       </Card>
+
+      {/* Financial Charts & Visualizations */}
+      <FinancialCharts generatedModel={generatedModel} />
 
       {/* Risk Analysis */}
       <Card>

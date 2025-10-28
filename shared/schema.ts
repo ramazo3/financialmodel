@@ -146,12 +146,21 @@ export const generatedModelSchema = z.object({
     netCashFlow: z.number(),
     cumulativeCash: z.number(),
   })),
+  annualProjections: z.array(z.object({
+    year: z.number(),
+    revenue: z.number(),
+    expenses: z.number(),
+    grossProfit: z.number(),
+    netProfit: z.number(),
+  })).optional(),
   keyMetrics: z.object({
     breakEvenMonth: z.number(),
     year1TotalRevenue: z.number(),
     year1NetProfit: z.number(),
     roi: z.number(),
     paybackPeriod: z.number(),
+    projectedYear5Revenue: z.number().optional(),
+    projectedYear5NetProfit: z.number().optional(),
   }),
   riskAnalysis: z.array(z.object({
     risk: z.string(),
