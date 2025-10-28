@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { generateFinancialModel } from "./gemini-service";
 import { generateExcelFile } from "./excel-generator";
+import { generateDocxFile } from "./docx-generator";
 import { z } from "zod";
 import * as fs from "fs";
 
@@ -110,6 +111,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.download(model.excelFilePath, `financial-model-${id}.xlsx`);
     } catch (error) {
       console.error("Error downloading file:", error);
+      res.status(500).json({ error: "Failed to download file" });
+    }
+  });
+
+  // Download DOCX file
+  app.get("/api/download-docx/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const model = await storage.getFinancialModel(id);
+
+      if (!model || !model.pdfFilePath) {
+        return res.status(404).json({ error: "Model or file not found" });
+      }
+
+      if (!fs.existsSync(model.pdfFilePath)) {
+        return res.status(404).json({ error: "File not found on disk" });
+      }
+
+      res.download(model.pdfFilePath, `business-report-${id}.docx`);
+    } catch (error) {
+      console.error("Error downloading DOCX file:", error);
       res.status(500).json({ error: "Failed to download file" });
     }
   });
@@ -309,10 +331,19 @@ async function processModelGeneration(
       input.businessIdea
     );
 
+    // Generate DOCX file
+    const docxPath = await generateDocxFile(
+      modelId,
+      generatedModel,
+      input.businessIdea,
+      sectorData
+    );
+
     // Update model with results
     await storage.updateFinancialModel(modelId, {
       generatedModel: generatedModel as any,
       excelFilePath: excelPath,
+      pdfFilePath: docxPath,
       status: "completed",
       completedAt: new Date(),
     });

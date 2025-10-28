@@ -35,11 +35,11 @@ export async function generateExcelFile(
   // Sheet 2: Revenue Projections
   const revenueSheet = workbook.addWorksheet("Revenue Projections");
   revenueSheet.columns = [
-    { key: "month", header: "Month", width: 10 },
-    { key: "revenue", header: "Revenue", width: 15 },
-    { key: "costs", header: "COGS", width: 15 },
-    { key: "grossProfit", header: "Gross Profit", width: 15 },
-    { key: "margin", header: "Margin %", width: 12 },
+    { key: "month", header: "Month", width: 12 },
+    { key: "revenue", header: "Revenue", width: 18 },
+    { key: "costs", header: "COGS", width: 18 },
+    { key: "grossProfit", header: "Gross Profit", width: 18 },
+    { key: "margin", header: "Margin %", width: 15 },
   ];
 
   revenueSheet.getRow(1).font = { bold: true };
@@ -65,14 +65,21 @@ export async function generateExcelFile(
   revenueSheet.getColumn("costs").numFmt = "$#,##0.00";
   revenueSheet.getColumn("grossProfit").numFmt = "$#,##0.00";
 
+  // Freeze header row and add auto-filter
+  revenueSheet.views = [{ state: "frozen", ySplit: 1 }];
+  revenueSheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: revenueSheet.rowCount, column: 5 },
+  };
+
   // Sheet 3: Cash Flow
   const cashFlowSheet = workbook.addWorksheet("Cash Flow");
   cashFlowSheet.columns = [
-    { key: "month", header: "Month", width: 10 },
-    { key: "inflow", header: "Cash Inflow", width: 15 },
-    { key: "outflow", header: "Cash Outflow", width: 15 },
-    { key: "netCashFlow", header: "Net Cash Flow", width: 15 },
-    { key: "cumulativeCash", header: "Cumulative Cash", width: 18 },
+    { key: "month", header: "Month", width: 12 },
+    { key: "inflow", header: "Cash Inflow", width: 18 },
+    { key: "outflow", header: "Cash Outflow", width: 18 },
+    { key: "netCashFlow", header: "Net Cash Flow", width: 18 },
+    { key: "cumulativeCash", header: "Cumulative Cash", width: 20 },
   ];
 
   cashFlowSheet.getRow(1).font = { bold: true };
@@ -98,6 +105,13 @@ export async function generateExcelFile(
   cashFlowSheet.getColumn("outflow").numFmt = "$#,##0.00";
   cashFlowSheet.getColumn("netCashFlow").numFmt = "$#,##0.00";
   cashFlowSheet.getColumn("cumulativeCash").numFmt = "$#,##0.00";
+
+  // Freeze header row and add auto-filter
+  cashFlowSheet.views = [{ state: "frozen", ySplit: 1 }];
+  cashFlowSheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: cashFlowSheet.rowCount, column: 5 },
+  };
 
   // Sheet 4: Annual Projections (5-Year)
   if (generatedModel.annualProjections && generatedModel.annualProjections.length > 0) {
@@ -154,6 +168,13 @@ export async function generateExcelFile(
       pattern: "solid",
       fgColor: { argb: "FFE0E0E0" },
     };
+
+    // Freeze header row and add auto-filter
+    annualSheet.views = [{ state: "frozen", ySplit: 1 }];
+    annualSheet.autoFilter = {
+      from: { row: 1, column: 1 },
+      to: { row: lastRow + 1, column: 6 },
+    };
   }
 
   // Sheet 5: Key Metrics
@@ -189,9 +210,9 @@ export async function generateExcelFile(
   // Sheet 6: Risk Analysis
   const riskSheet = workbook.addWorksheet("Risk Analysis");
   riskSheet.columns = [
-    { key: "risk", header: "Risk", width: 30 },
+    { key: "risk", header: "Risk", width: 35 },
     { key: "impact", header: "Impact", width: 15 },
-    { key: "mitigation", header: "Mitigation Strategy", width: 50 },
+    { key: "mitigation", header: "Mitigation Strategy", width: 60 },
   ];
 
   riskSheet.getRow(1).font = { bold: true };
@@ -210,11 +231,18 @@ export async function generateExcelFile(
     });
   });
 
+  // Freeze header row and add auto-filter
+  riskSheet.views = [{ state: "frozen", ySplit: 1 }];
+  riskSheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: riskSheet.rowCount, column: 3 },
+  };
+
   // Sheet 7: Recommendations
   const recSheet = workbook.addWorksheet("Recommendations");
   recSheet.columns = [
-    { key: "num", header: "#", width: 5 },
-    { key: "recommendation", header: "Strategic Recommendation", width: 80 },
+    { key: "num", header: "#", width: 6 },
+    { key: "recommendation", header: "Strategic Recommendation", width: 90 },
   ];
 
   recSheet.getRow(1).font = { bold: true };
@@ -226,11 +254,16 @@ export async function generateExcelFile(
   recSheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
 
   generatedModel.recommendations.forEach((rec, index) => {
-    recSheet.addRow({
+    const row = recSheet.addRow({
       num: index + 1,
       recommendation: rec,
     });
+    // Enable text wrapping for long recommendations
+    row.getCell(2).alignment = { wrapText: true, vertical: "top" };
   });
+
+  // Freeze header row
+  recSheet.views = [{ state: "frozen", ySplit: 1 }];
 
   // Save file
   const fileName = `financial-model-${modelId}.xlsx`;

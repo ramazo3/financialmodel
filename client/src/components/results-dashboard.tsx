@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   RefreshCw,
   FileSpreadsheet,
+  FileText,
 } from "lucide-react";
 import type { FinancialModel, GeneratedModel } from "@shared/schema";
 import { FinancialCharts } from "@/components/financial-charts";
@@ -36,6 +37,18 @@ export function ResultsDashboard({ modelId, onStartOver }: ResultsDashboardProps
     const link = document.createElement("a");
     link.href = `/api/download/${modelId}`;
     link.download = `financial-model-${modelId}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadDocx = async () => {
+    if (!model?.pdfFilePath) return;
+    
+    // Trigger download
+    const link = document.createElement("a");
+    link.href = `/api/download-docx/${modelId}`;
+    link.download = `business-report-${modelId}.docx`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -76,33 +89,62 @@ export function ResultsDashboard({ modelId, onStartOver }: ResultsDashboardProps
         </CardHeader>
       </Card>
 
-      {/* Download Card */}
-      <Card className="border-2">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-lg bg-green-500/10 flex items-center justify-center">
-                <FileSpreadsheet className="h-8 w-8 text-green-600 dark:text-green-400" />
+      {/* Download Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="border-2">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-lg bg-green-500/10 flex items-center justify-center">
+                  <FileSpreadsheet className="h-8 w-8 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground mb-1">Financial Model</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Excel workbook with projections & analysis
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-1">Complete Financial Model</h3>
-                <p className="text-sm text-muted-foreground">
-                  Excel workbook with revenue projections, cash flow, P&L, and risk analysis
-                </p>
-              </div>
+              <Button
+                size="lg"
+                onClick={handleDownload}
+                className="min-w-[140px]"
+                data-testid="button-download-excel"
+              >
+                <Download className="mr-2 h-5 w-5" />
+                Excel
+              </Button>
             </div>
-            <Button
-              size="lg"
-              onClick={handleDownload}
-              className="min-w-[200px]"
-              data-testid="button-download-excel"
-            >
-              <Download className="mr-2 h-5 w-5" />
-              Download Excel
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground mb-1">Research Report</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Business report with market analysis
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="lg"
+                onClick={handleDownloadDocx}
+                className="min-w-[140px]"
+                data-testid="button-download-docx"
+              >
+                <Download className="mr-2 h-5 w-5" />
+                DOCX
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
