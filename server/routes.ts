@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { generateFinancialModel } from "./gemini-service";
+import { generateFinancialModel, analyzeSectorMatch } from "./gemini-service";
 import { generateExcelFile } from "./excel-generator";
 import { generateDocxFile } from "./docx-generator";
 import { z } from "zod";
@@ -16,6 +16,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching sectors:", error);
       res.status(500).json({ error: "Failed to fetch sectors" });
+    }
+  });
+
+  // Get AI-powered sector recommendations
+  app.post("/api/sectors/recommend", async (req, res) => {
+    try {
+      const schema = z.object({
+        businessIdea: z.string().min(10, "Business idea must be at least 10 characters"),
+      });
+
+      const { businessIdea } = schema.parse(req.body);
+      const sectors = await storage.getAllSectors();
+      
+      const recommendations = await analyzeSectorMatch(businessIdea, sectors);
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error generating sector recommendations:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to generate recommendations" });
     }
   });
 
@@ -91,6 +113,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching model:", error);
       res.status(500).json({ error: "Failed to fetch model" });
+    }
+  });
+
+  // Regenerate financial model with new assumptions
+  app.post("/api/models/:id/regenerate", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const model = await storage.getFinancialModel(id);
+
+      if (!model) {
+        return res.status(404).json({ error: "Model not found" });
+      }
+
+      const assumptionsSchema = z.object({
+        startupCost: z.number().positive("Startup cost must be positive"),
+        monthlyRevenue: z.number().positive("Monthly revenue must be positive"),
+        grossMargin: z.number().min(0).max(100, "Gross margin must be between 0 and 100"),
+        operatingExpenses: z.number().positive("Operating expenses must be positive"),
+      });
+
+      const validated = assumptionsSchema.parse(req.body);
+
+      // Update model with new assumptions and reset to processing
+      await storage.updateFinancialModel(id, {
+        startupCost: validated.startupCost.toString(),
+        monthlyRevenue: validated.monthlyRevenue.toString(),
+        grossMargin: validated.grossMargin.toString(),
+        operatingExpenses: validated.operatingExpenses.toString(),
+        status: "processing",
+      });
+
+      // Start background processing (don't await)
+      processModelGeneration(id, {
+        businessIdea: model.businessIdea,
+        selectedSector: model.selectedSector || undefined,
+        startupCost: validated.startupCost,
+        monthlyRevenue: validated.monthlyRevenue,
+        grossMargin: validated.grossMargin,
+        operatingExpenses: validated.operatingExpenses,
+      }).catch((error) => {
+        console.error("Error in background processing:", error);
+        storage.updateFinancialModel(id, { status: "failed" });
+      });
+
+      res.json({ id, status: "processing" });
+    } catch (error) {
+      console.error("Error regenerating model:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to regenerate model" });
     }
   });
 

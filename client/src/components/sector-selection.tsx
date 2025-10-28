@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ArrowRight, Search, TrendingUp, Shield, Zap, BarChart3, CheckCircle2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, ArrowRight, Search, TrendingUp, Shield, Zap, BarChart3, CheckCircle2, Sparkles, Lightbulb } from "lucide-react";
 import { useState } from "react";
 import type { BusinessSector } from "@shared/schema";
 
@@ -20,6 +21,24 @@ export function SectorSelection({ businessIdea, onSelect, onBack }: SectorSelect
 
   const { data: sectors, isLoading } = useQuery<BusinessSector[]>({
     queryKey: ["/api/sectors"],
+  });
+
+  // Fetch AI-powered sector recommendations
+  const { data: recommendations, isLoading: isLoadingRecommendations } = useQuery<{
+    recommendedSectors: string[];
+    reasoning: string;
+  }>({
+    queryKey: ["/api/sectors/recommend", businessIdea],
+    queryFn: async () => {
+      const response = await fetch("/api/sectors/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessIdea }),
+      });
+      if (!response.ok) throw new Error("Failed to fetch recommendations");
+      return response.json();
+    },
+    enabled: businessIdea.length >= 10, // Only fetch if business idea is meaningful
   });
 
   const filteredSectors = sectors?.filter(sector =>
@@ -69,6 +88,50 @@ export function SectorSelection({ businessIdea, onSelect, onBack }: SectorSelect
         </CardContent>
       </Card>
 
+      {/* AI Recommendations */}
+      {isLoadingRecommendations ? (
+        <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+              <CardTitle className="text-lg">Analyzing your business idea...</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-16 w-full" />
+          </CardContent>
+        </Card>
+      ) : recommendations && recommendations.recommendedSectors.length > 0 ? (
+        <Alert className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+          <Lightbulb className="h-5 w-5 text-primary" />
+          <AlertDescription className="mt-2">
+            <p className="font-semibold text-base text-foreground mb-2">
+              AI Recommendations
+            </p>
+            <p className="text-sm text-muted-foreground mb-3">
+              {recommendations.reasoning}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {recommendations.recommendedSectors.map((sectorName) => (
+                <Badge
+                  key={sectorName}
+                  variant="default"
+                  className="bg-primary/20 hover:bg-primary/30 text-primary-foreground cursor-pointer"
+                  onClick={() => {
+                    const element = document.getElementById(`sector-${sectorName}`);
+                    element?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }}
+                  data-testid={`badge-recommended-${sectorName}`}
+                >
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  {sectorName}
+                </Badge>
+              ))}
+            </div>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {/* Sectors Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -86,28 +149,46 @@ export function SectorSelection({ businessIdea, onSelect, onBack }: SectorSelect
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredSectors.map((sector) => (
-            <Card
-              key={sector.id}
-              className={`cursor-pointer transition-all hover-elevate ${
-                selectedSector === sector.sectorName
-                  ? "border-2 border-primary bg-primary/5"
-                  : "border"
-              }`}
-              onClick={() => handleSelect(sector.sectorName)}
-              data-testid={`card-sector-${sector.id}`}
-            >
-              <CardHeader className="pb-4">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-lg leading-tight">{sector.sectorName}</CardTitle>
-                  {selectedSector === sector.sectorName && (
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                  )}
-                </div>
-                <Badge variant="secondary" className="w-fit">
-                  {sector.investorPersonaFit}
-                </Badge>
-              </CardHeader>
+          {filteredSectors.map((sector) => {
+            const isRecommended = recommendations?.recommendedSectors.includes(sector.sectorName);
+            
+            return (
+              <Card
+                key={sector.id}
+                id={`sector-${sector.sectorName}`}
+                className={`cursor-pointer transition-all hover-elevate ${
+                  selectedSector === sector.sectorName
+                    ? "border-2 border-primary bg-primary/5"
+                    : isRecommended
+                    ? "border-2 border-primary/50 bg-gradient-to-br from-primary/10 to-transparent"
+                    : "border"
+                }`}
+                onClick={() => handleSelect(sector.sectorName)}
+                data-testid={`card-sector-${sector.id}`}
+              >
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-1">
+                      <CardTitle className="text-lg leading-tight">{sector.sectorName}</CardTitle>
+                      {isRecommended && (
+                        <Sparkles className="h-4 w-4 text-primary flex-shrink-0" data-testid={`icon-recommended-${sector.id}`} />
+                      )}
+                    </div>
+                    {selectedSector === sector.sectorName && (
+                      <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="secondary" className="w-fit">
+                      {sector.investorPersonaFit}
+                    </Badge>
+                    {isRecommended && (
+                      <Badge variant="default" className="w-fit bg-primary/20 text-primary-foreground">
+                        AI Match
+                      </Badge>
+                    )}
+                  </div>
+                </CardHeader>
 
               <CardContent className="space-y-4">
                 {/* Inachee Index Score */}
@@ -182,7 +263,8 @@ export function SectorSelection({ businessIdea, onSelect, onBack }: SectorSelect
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 

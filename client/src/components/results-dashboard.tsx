@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { FinancialModel, GeneratedModel } from "@shared/schema";
 import { FinancialCharts } from "@/components/financial-charts";
+import { EditableAssumptions } from "@/components/editable-assumptions";
 
 interface ResultsDashboardProps {
   modelId: string;
@@ -145,6 +146,9 @@ export function ResultsDashboard({ modelId, onStartOver }: ResultsDashboardProps
           </CardContent>
         </Card>
       </div>
+
+      {/* Editable Assumptions */}
+      <EditableAssumptions model={model} />
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

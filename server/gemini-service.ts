@@ -310,6 +310,82 @@ async function runValidatorAgent(
   return model;
 }
 
+// Sector Matching Agent
+export async function analyzeSectorMatch(
+  businessIdea: string,
+  availableSectors: BusinessSector[]
+): Promise<{ recommendedSectors: string[]; reasoning: string }> {
+  try {
+    const sectorNames = availableSectors.map(s => s.sectorName).join(", ");
+    
+    const systemPrompt = `You are a Business Sector Matching Agent. Analyze the given business idea and recommend the top 3 most suitable business sectors from the available options.
+
+Consider factors like:
+- Industry alignment and relevance
+- Market potential and growth opportunities
+- Risk profile and barriers to entry
+- Resource requirements
+- Scalability and profitability potential
+
+Respond ONLY with valid JSON matching this exact structure.`;
+
+    const prompt = `Business Idea: "${businessIdea}"
+
+Available Sectors: ${sectorNames}
+
+Analyze this business idea and recommend the top 3 most suitable sectors. Provide clear reasoning for each recommendation.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            recommendedSectors: {
+              type: "array",
+              items: { type: "string" },
+              description: "Array of top 3 recommended sector names (exact matches from the available sectors list)",
+            },
+            reasoning: {
+              type: "string",
+              description: "Brief explanation of why these sectors match the business idea (2-3 sentences)",
+            },
+          },
+          required: ["recommendedSectors", "reasoning"],
+        },
+      },
+      contents: prompt,
+    });
+
+    const result = JSON.parse(response.text || "{}");
+    
+    // Map AI recommendations to canonical sector names (exact matches from database)
+    const canonicalSectors = result.recommendedSectors
+      ?.map((aiName: string) => {
+        // Find the matching sector with exact canonical name
+        const matchedSector = availableSectors.find(
+          s => s.sectorName.toLowerCase() === aiName.toLowerCase()
+        );
+        return matchedSector?.sectorName; // Return canonical name from database
+      })
+      .filter((name: string | undefined): name is string => name !== undefined) || [];
+
+    return {
+      recommendedSectors: canonicalSectors.slice(0, 3), // Top 3 with canonical names
+      reasoning: result.reasoning || "These sectors align well with your business idea.",
+    };
+  } catch (error) {
+    console.error("Error analyzing sector match:", error);
+    // Return empty recommendations on error
+    return {
+      recommendedSectors: [],
+      reasoning: "Unable to generate sector recommendations at this time.",
+    };
+  }
+}
+
 // Orchestrate all agents
 export async function generateFinancialModel(input: ModelGenerationInput): Promise<GeneratedModel> {
   try {
