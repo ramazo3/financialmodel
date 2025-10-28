@@ -4,11 +4,11 @@
 An AI-powered web application that generates comprehensive financial models from simple user inputs. Uses Google Gemini AI with a 4-agent orchestration system to analyze business ideas and create detailed Excel financial models.
 
 ## Tech Stack
-- **Frontend**: React, TypeScript, Tailwind CSS, Shadcn UI components, TanStack Query
+- **Frontend**: React, TypeScript, Tailwind CSS, Shadcn UI components, TanStack Query, Recharts
 - **Backend**: Node.js, Express, TypeScript
 - **Database**: PostgreSQL (Neon) with Drizzle ORM
 - **AI**: Google Gemini API (gemini-2.5-flash, gemini-2.5-pro)
-- **File Generation**: ExcelJS for creating Excel workbooks
+- **File Generation**: ExcelJS for Excel workbooks, docx library for Word documents
 - **Data**: CSV-based business sector dataset (34 pre-analyzed sectors loaded into database)
 
 ## Key Features
@@ -16,10 +16,12 @@ An AI-powered web application that generates comprehensive financial models from
 2. **Sector Selection**: Browse and select from 35+ pre-analyzed business sectors with benchmarks
 3. **Financial Input Forms**: Customize startup costs, revenue, margins, and expenses
 4. **AI Agent Processing**: 4-agent system (Data Analyst, Financial Modeler, Validator, Excel Generator)
-5. **Results Dashboard**: View key metrics, executive summary, risks, and recommendations
-6. **Excel Download**: Complete financial model with multiple worksheets
-7. **Saved Models**: View and manage all generated models with list and detail pages
-8. **Version History**: Save model snapshots and restore previous versions with change tracking
+5. **Results Dashboard**: View key metrics, executive summary, risks, and recommendations with interactive 5-year charts
+6. **Excel Download**: Complete financial model with 7 comprehensive worksheets
+7. **DOCX Download**: Professional business report with cover page, executive summary, financial projections, risk analysis, and market benchmarks
+8. **Saved Models**: View and manage all generated models with list and detail pages
+9. **Version History**: Save model snapshots and restore previous versions with change tracking
+10. **Scenario Planning**: Create and compare alternative financial scenarios
 
 ## Architecture
 
@@ -37,9 +39,10 @@ An AI-powered web application that generates comprehensive financial models from
 - `components/scenario-planning.tsx` - Scenario analysis with CRUD operations and comparison table
 
 ### Backend Services
-- `server/routes.ts` - API endpoints for sectors, model generation, downloads
+- `server/routes.ts` - API endpoints for sectors, model generation, Excel/DOCX downloads
 - `server/gemini-service.ts` - Gemini AI integration with 4-agent orchestration
-- `server/excel-generator.ts` - Excel workbook generation using ExcelJS
+- `server/excel-generator.ts` - Excel workbook generation with 7 worksheets using ExcelJS
+- `server/docx-generator.ts` - DOCX business report generation using docx library
 - `server/load-sectors.ts` - CSV data loading for business sectors
 - `server/storage.ts` - PostgreSQL database storage implementation with Drizzle ORM
 - `server/db.ts` - Database connection setup
@@ -94,6 +97,9 @@ Retrieves financial model by ID (including generated results)
 ### `GET /api/download/:id`
 Downloads the Excel file for a completed model
 
+### `GET /api/download-docx/:id`
+Downloads the DOCX business report for a completed model
+
 ### `GET /api/models/:id/versions`
 Returns version history for a specific model
 
@@ -142,18 +148,20 @@ client/
 server/
   gemini-service.ts - AI orchestration
   excel-generator.ts - Excel file creation
+  docx-generator.ts - DOCX report generation
   load-sectors.ts - CSV data loading
   routes.ts - API routes
   storage.ts - Data storage
 shared/
   schema.ts - TypeScript types and Zod schemas
-generated_models/ - Excel files output directory
+generated_models/ - Excel and DOCX files output directory
 ```
 
 ## Development Notes
 - Business sector data loaded on server startup from CSV
-- Excel files saved to `generated_models/` directory
+- Excel and DOCX files saved to `generated_models/` directory
 - AI processing runs asynchronously in background
+- Both Excel and DOCX files generated during processing
 - Frontend polls for model completion
 - All financial calculations done server-side by AI agents
 
@@ -175,6 +183,39 @@ generated_models/ - Excel files output directory
   - Professional formatting with currency ($xx,xxx) and percentage (xx.x%) displays
   - Responsive design with proper tooltips, legends, and color-coding
   - Integrated charts into ResultsDashboard after Executive Summary
+
+- **Phase 2: Enhanced Excel Reports**:
+  - **Phase 2.1**: Enhanced Excel generator with 7 comprehensive worksheets
+    - Annual Projections (5-year data with SUM formulas)
+    - Monthly Projections (Year 1 detail)
+    - Cash Flow Analysis (monthly tracking)
+    - Profit & Loss Statement
+    - Risk Analysis (with severity and mitigation)
+    - Strategic Recommendations
+    - Sector Benchmarks
+  - **Phase 2.2**: Skipped - ExcelJS does not support native charts
+  - **Phase 2.3**: Professional Excel Formatting
+    - Freeze panes on all worksheet headers
+    - Auto-filters for all data tables
+    - Optimized column widths for readability
+    - Text wrapping for long content cells
+    - Currency and percentage formatting
+
+- **Phase 3: DOCX Report Generation**:
+  - Created comprehensive DOCX business report generator (server/docx-generator.ts)
+  - Document sections:
+    - Cover Page with business title and date
+    - Executive Summary from AI analysis
+    - Financial Overview table with key metrics (Year 1 + Year 5)
+    - 5-Year Financial Projections table
+    - Risk Analysis table with impact levels and mitigation strategies
+    - Strategic Recommendations numbered list
+    - Market Analysis with sector benchmarks (when available)
+  - API endpoint: GET /api/download-docx/:id
+  - Frontend download buttons in 2-column grid layout (Excel + DOCX)
+  - Professional formatting with properly structured tables using TextRun for bold text
+  - Conditional rendering for optional sections
+  - Files generated during background processing alongside Excel files
 
 ### Previous Session (October 26, 2025)
 - **UI Improvements**:
