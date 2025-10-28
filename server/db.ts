@@ -8,7 +8,8 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  // SSL is handled automatically via DATABASE_URL connection string parameters
+  // For Neon and other managed PostgreSQL services, the connection string includes ?sslmode=require
 });
 
 export const db = drizzle(pool, { schema });
