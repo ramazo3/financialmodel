@@ -12,7 +12,9 @@ I prefer iterative development with clear communication at each stage. Ask for c
 The application features a professional financial services aesthetic, utilizing a primary blue color (#4472C4), with Inter for UI text and JetBrains Mono for numbers and data. Shadcn UI components with custom styling are used for a consistent look and feel. The design is mobile-first, with responsive breakpoints at 768px (md) and 1024px (lg). The user interface includes a multi-step form wizard for progressive disclosure of business input collection, a results dashboard with interactive 5-year charts, and dedicated pages for managing saved models, version history, and scenario planning.
 
 ### Technical Implementations
-The application is built with a React, TypeScript, and Tailwind CSS frontend, using TanStack Query for data fetching and Recharts for interactive visualizations. The backend uses Node.js and Express with TypeScript. Data persistence is handled by PostgreSQL (Neon) with Drizzle ORM. AI capabilities are powered by the Google Gemini API (gemini-2.5-flash, gemini-2.5-pro). File generation for Excel workbooks is done using ExcelJS, and for Word documents using the docx library.
+The application is built with a React, TypeScript, and Tailwind CSS frontend, using TanStack Query for data fetching and Recharts for interactive visualizations. The backend uses Node.js and Express with TypeScript. Data persistence is handled by PostgreSQL with the standard `pg` library and Drizzle ORM using the `drizzle-orm/node-postgres` adapter. AI capabilities are powered by the Google Gemini API (gemini-2.5-flash, gemini-2.5-pro). File generation for Excel workbooks is done using ExcelJS, and for Word documents using the docx library.
+
+**Database Connection**: Uses the standard PostgreSQL `pg` library with secure TLS/SSL connections managed by the DATABASE_URL connection string parameters. The connection respects SSL settings from the managed database provider (e.g., `?sslmode=require`).
 
 ### Feature Specifications
 - **Multi-step Form Wizard**: Guides users through input collection.
